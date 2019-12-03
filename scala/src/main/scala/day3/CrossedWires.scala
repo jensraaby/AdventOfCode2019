@@ -46,11 +46,11 @@ object CrossedWires extends IOApp {
   def parseWire(wire: String): Wire = {
     val movesAsStrings = wire.split(",")
     val moves = movesAsStrings.map { move =>
-      move.toCharArray match {
-        case Array('R', tail @ _*) => R(tail.mkString("").toInt)
-        case Array('L', tail @ _*) => L(tail.mkString("").toInt)
-        case Array('U', tail @ _*) => U(tail.mkString("").toInt)
-        case Array('D', tail @ _*) => D(tail.mkString("").toInt)
+      move.splitAt(1) match {
+        case ('R', steps) => R(steps.toInt)
+        case ('L', steps) => L(steps.toInt)
+        case ('U', steps) => U(steps.toInt)
+        case ('D', steps) => D(steps.toInt)
       }
     }
     Wire(moves.toList)
