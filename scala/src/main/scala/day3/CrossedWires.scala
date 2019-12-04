@@ -47,10 +47,10 @@ object CrossedWires extends IOApp {
     val movesAsStrings = wire.split(",")
     val moves = movesAsStrings.map { move =>
       move.splitAt(1) match {
-        case ('R', steps) => R(steps.toInt)
-        case ('L', steps) => L(steps.toInt)
-        case ('U', steps) => U(steps.toInt)
-        case ('D', steps) => D(steps.toInt)
+        case ("R", steps) => R(steps.toInt)
+        case ("L", steps) => L(steps.toInt)
+        case ("U", steps) => U(steps.toInt)
+        case ("D", steps) => D(steps.toInt)
       }
     }
     Wire(moves.toList)
