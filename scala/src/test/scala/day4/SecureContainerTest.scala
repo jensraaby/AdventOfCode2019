@@ -29,7 +29,7 @@ class SecureContainerTest extends AnyFunSuite with Matchers {
     SecureContainer.containsTwoSameAdjacent(List(1, 2, 3, 4, 4)) shouldBe true
   }
 
-  test("Is good password") {
+  test("Is good password (part 1)") {
     SecureContainer.isGood(122) shouldBe false
     SecureContainer.isGood(1224567) shouldBe false
 
@@ -41,7 +41,7 @@ class SecureContainerTest extends AnyFunSuite with Matchers {
 
   }
 
-  test("Find valid passwords") {
+  test("Find valid passwords (part 1)") {
     SecureContainer.findValidPasswords(112233, 112234) should contain theSameElementsAs List(
       112233,
       112234
@@ -51,6 +51,20 @@ class SecureContainerTest extends AnyFunSuite with Matchers {
       123466,
       123477,
       123488
+    )
+  }
+
+  test("Has valid doubles (for part 2)") {
+    SecureContainer.hasValidDoubles(List(1, 1, 2, 2, 3, 3)) shouldBe true
+    SecureContainer.hasValidDoubles(List(1, 2, 4, 4, 4, 5)) shouldBe false
+    SecureContainer.hasValidDoubles(List(1, 2, 2, 4, 4, 4)) shouldBe true
+    SecureContainer.hasValidDoubles(List(1, 1, 1, 1, 2, 2)) shouldBe true
+    SecureContainer.hasValidDoubles(List(2, 2, 4, 4, 4, 4)) shouldBe true
+  }
+
+  test("Find valid passwords (part 2)") {
+    SecureContainer.findValidPasswordsPart2(111112, 111123) should contain theSameElementsAs List(
+      111122
     )
   }
 }
