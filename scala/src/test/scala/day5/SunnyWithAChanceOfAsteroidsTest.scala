@@ -56,10 +56,47 @@ class SunnyWithAChanceOfAsteroidsTest extends AnyFunSuite with Matchers {
       Some(Computer(Vector(1101, 100, -1, 4, 99), 4, Vector()))
   }
 
-  test("Execute whole program") {
+  test("Execute whole program with part 1 instructions") {
     evaluateProgram(Vector(99), 0) shouldBe Vector()
     evaluateProgram(Vector(3, 0, 4, 0, 99), 88) shouldBe Vector(88)
     evaluateProgram(Vector(3, 0, 4, 0, 4, 1, 99), 88) shouldBe Vector(0, 88)
     evaluateProgram(Vector(1002, 4, 3, 4, 33), 1) shouldBe Vector()
+  }
+
+  test("Execute whole program with part 2 instructions") {
+    val isInput8 = Vector(3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8)
+    evaluateProgram(isInput8, 1) shouldBe Vector(0)
+    evaluateProgram(isInput8, 8) shouldBe Vector(1)
+
+    val isInputLessThan8 = Vector(3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8)
+    evaluateProgram(isInputLessThan8, 99) shouldBe Vector(0)
+    evaluateProgram(isInputLessThan8, 1) shouldBe Vector(1)
+
+    val isEqualTo8ImmediateMode = Vector(3, 3, 1108, -1, 8, 3, 4, 3, 99)
+    evaluateProgram(isEqualTo8ImmediateMode, 888) shouldBe Vector(0)
+    evaluateProgram(isEqualTo8ImmediateMode, 8) shouldBe Vector(1)
+
+    val isLessThan8ImmediateMode = Vector(3, 3, 1107, -1, 8, 3, 4, 3, 99)
+    evaluateProgram(isLessThan8ImmediateMode, 888) shouldBe Vector(0)
+    evaluateProgram(isLessThan8ImmediateMode, 7) shouldBe Vector(1)
+
+    val jumpIfInput0 =
+      Vector(3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9)
+    evaluateProgram(jumpIfInput0, 0) shouldBe Vector(0)
+    evaluateProgram(jumpIfInput0, 1) shouldBe Vector(1)
+
+    val jumpIfInput0ImmediateMode =
+      Vector(3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1)
+    evaluateProgram(jumpIfInput0ImmediateMode, 0) shouldBe Vector(0)
+    evaluateProgram(jumpIfInput0ImmediateMode, 100) shouldBe Vector(1)
+
+    val moreComplexTest = Vector(3, 21, 1008, 21, 8, 20, 1005, 20, 22, 107, 8,
+      21, 20, 1006, 20, 31, 1106, 0, 36, 98, 0, 0, 1002, 21, 125, 20, 4, 20,
+      1105, 1, 46, 104, 999, 1105, 1, 46, 1101, 1000, 1, 20, 4, 20, 1105, 1, 46,
+      98, 99)
+    evaluateProgram(moreComplexTest, 1) shouldBe Vector(999)
+    evaluateProgram(moreComplexTest, 8) shouldBe Vector(1000)
+    evaluateProgram(moreComplexTest, 9) shouldBe Vector(1001)
+
   }
 }

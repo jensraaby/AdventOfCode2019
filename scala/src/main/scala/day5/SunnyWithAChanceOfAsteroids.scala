@@ -12,6 +12,10 @@ object SunnyWithAChanceOfAsteroids extends IOApp {
   case object Multiply extends Op
   case object In extends Op
   case object Out extends Op
+  case object JumpIfTrue extends Op
+  case object JumpIfFalse extends Op
+  case object LessThan extends Op
+  case object Equals extends Op
   case object Stop extends Op
 
   sealed trait ParamMode
@@ -32,8 +36,13 @@ object SunnyWithAChanceOfAsteroids extends IOApp {
       val paramModesToArgAddresses = paramModes.zip(inputs)
       val parameters = paramModesToArgAddresses.map(loadParameters(program))
 
-      val (newOutputs, newProgram) = step(op, parameters, outputs, input)
-      val newPointer = pointer + inOffsets.size + outOffsets.size + 1
+      val (newOutputs, newProgram, maybeNewPointer) =
+        step(op, parameters, outputs, input)
+
+      val newPointer = maybeNewPointer match {
+        case None          => pointer + inOffsets.size + outOffsets.size + 1
+        case Some(pointer) => pointer
+      }
 
       if (op == Stop) {
         None
@@ -48,14 +57,30 @@ object SunnyWithAChanceOfAsteroids extends IOApp {
                      programInput: Int) = {
       op match {
         case Add =>
-          (output, program.updated(outputAddresses.head, arguments.sum))
+          (output, program.updated(outputAddresses.head, arguments.sum), None)
         case Multiply =>
-          (output, program.updated(outputAddresses.head, arguments.product))
+          (
+            output,
+            program.updated(outputAddresses.head, arguments.product),
+            None
+          )
         case In =>
-          (output, program.updated(outputAddresses.head, programInput))
+          (output, program.updated(outputAddresses.head, programInput), None)
         case Out =>
-          (output.prepended(arguments.head), program)
-        case Stop => (output, program)
+          (output.prepended(arguments.head), program, None)
+        case JumpIfTrue =>
+          val newPointer = if (arguments.head != 0) Some(arguments(1)) else None
+          (output, program, newPointer)
+        case JumpIfFalse =>
+          val newPointer = if (arguments.head == 0) Some(arguments(1)) else None
+          (output, program, newPointer)
+        case LessThan =>
+          val result = if (arguments.head < arguments(1)) 1 else 0
+          (output, program.updated(outputAddresses.head, result), None)
+        case Equals =>
+          val result = if (arguments.head == arguments(1)) 1 else 0
+          (output, program.updated(outputAddresses.head, result), None)
+        case Stop => (output, program, None)
       }
     }
   }
@@ -79,15 +104,19 @@ object SunnyWithAChanceOfAsteroids extends IOApp {
     val op = opCode(instruction)
     val paramModes = modes(instruction)
 
-    val insAndOuts = op match {
-      case Add      => (Vector(1, 2), Vector(3))
-      case Multiply => (Vector(1, 2), Vector(3))
-      case In       => (Vector(), Vector(1))
-      case Out      => (Vector(1), Vector())
-      case Stop     => (Vector(), Vector())
+    val inAndOutOffsets = op match {
+      case Add         => (Vector(1, 2), Vector(3))
+      case Multiply    => (Vector(1, 2), Vector(3))
+      case In          => (Vector(), Vector(1))
+      case Out         => (Vector(1), Vector())
+      case JumpIfTrue  => (Vector(1, 2), Vector())
+      case JumpIfFalse => (Vector(1, 2), Vector())
+      case LessThan    => (Vector(1, 2), Vector(3))
+      case Equals      => (Vector(1, 2), Vector(3))
+      case Stop        => (Vector(), Vector())
     }
 
-    (op, paramModes, insAndOuts._1, insAndOuts._2)
+    (op, paramModes, inAndOutOffsets._1, inAndOutOffsets._2)
   }
 
   def opCode(code: Int): Op = code % 100 match {
@@ -95,6 +124,10 @@ object SunnyWithAChanceOfAsteroids extends IOApp {
     case 2  => Multiply
     case 3  => In
     case 4  => Out
+    case 5  => JumpIfTrue
+    case 6  => JumpIfFalse
+    case 7  => LessThan
+    case 8  => Equals
     case 99 => Stop
     case other =>
       throw new RuntimeException(s"Unexpected operation code $other")
@@ -132,7 +165,7 @@ object SunnyWithAChanceOfAsteroids extends IOApp {
     for {
       testProgram <- loadProgram
       _ <- Console.putStrLn("Running program...")
-      outputs = evaluateProgram(testProgram, input = 1)
+      outputs = evaluateProgram(testProgram, input = 5)
       _ <- Console.putStrLn("Completed execution. Outputs:")
       _ <- Console.putStrLn(outputs.mkString(","))
     } yield ExitCode.Success
