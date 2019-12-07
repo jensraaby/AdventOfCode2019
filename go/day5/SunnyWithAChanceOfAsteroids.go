@@ -10,9 +10,9 @@ import (
 )
 
 func main() {
-	testMemory := []int{3, 0, 4, 0, 99}
+	testMemory := []int{3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8}
 
-	result := RunThroughProgram(testMemory, -100)
+	result := RunThroughProgram(testMemory, 8)
 	fmt.Printf("Part 1: Finished execution. Memory state: %v\n", result.memory)
 	fmt.Printf("Outputs: %v\n", result.outputs)
 }
@@ -65,6 +65,36 @@ func RunThroughProgram(memory []int, input int) ProgramResult {
 			} else if instruction.opcode == 4 { // Output
 				outputs = append(outputs, param1)
 				instructionPointer += 2
+			} else if instruction.opcode == 5 { // Jump if true
+				if param1 != 0 {
+					instructionPointer = param2
+				} else {
+					instructionPointer += 3
+				}
+			} else if instruction.opcode == 6 { // Jump if false
+				if param1 == 0 {
+					instructionPointer = param2
+				} else {
+					instructionPointer += 3
+				}
+			} else if instruction.opcode == 7 { // Less than
+				var result int
+				if param1 < param2 {
+					result = 1
+				} else {
+					result = 0
+				}
+				newMemory[newMemory[instructionPointer+3]] = result
+				instructionPointer += 4
+			} else if instruction.opcode == 8 { // Equals
+				var result int
+				if param1 == param2 {
+					result = 1
+				} else {
+					result = 0
+				}
+				newMemory[newMemory[instructionPointer+3]] = result
+				instructionPointer += 4
 			} else {
 				panic(fmt.Errorf("invalid opcode %v", instruction.opcode))
 			}
@@ -77,13 +107,14 @@ func RunThroughProgram(memory []int, input int) ProgramResult {
 }
 
 func readFromMemory(mode int, index int, memory []int) (int, error) {
-	if mode == 0 && index >= len(memory)-1 {
-		return 0, fmt.Errorf("index out of bounds")
-	}
 	if mode == 1 {
 		return memory[index], nil
 	} else {
-		return memory[memory[index]], nil
+		initialAddress := memory[index]
+		if initialAddress > len(memory)-1 {
+			return 0, fmt.Errorf("index out of bounds")
+		}
+		return memory[initialAddress], nil
 	}
 }
 
