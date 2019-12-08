@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"log"
+	"os"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -27,6 +31,25 @@ func main() {
 	signal3 := runAmplificationCircuit(testProg3, 0, 1, 0, 4, 3, 2)
 	fmt.Printf("Output from example program 2: %v\n", signal3)
 
+	inputProgram := loadProgramFromFile("input.txt")
+	sig := runAmplificationCircuit(inputProgram, 0, 0, 1, 2, 3, 4)
+	fmt.Printf("Output from part 1 prog: %v\n", sig)
+
+	phaseInputs := []int{0, 1, 2, 3, 4}
+	phasePermutationChan := make(chan []int)
+	phasePermutations := make([][]int, 1)
+	bestPermutation := phaseInputs
+	bestResult := 0
+	go permutations(phaseInputs, phasePermutationChan)
+	for i := range phasePermutationChan {
+		phasePermutations = append(phasePermutations, i)
+		result := runAmplificationCircuit(inputProgram, 0, i[0], i[1], i[2], i[3], i[4])
+		if result > bestResult {
+			bestResult = result
+			bestPermutation = i
+		}
+	}
+	fmt.Printf("Best result: %v for permutation: %v", bestResult, bestPermutation)
 }
 
 func runAmplificationCircuit(software []int, inputSignal int, phase1, phase2, phase3, phase4, phase5 int) int {
@@ -179,5 +202,61 @@ func parseProgram(prog int) (*instruction, error) {
 		mode1,
 		mode2,
 	}, nil
+}
 
+func permutations(initial []int, out chan []int) {
+	// algorithm from https://quickperm.org/
+	a := make([]int, len(initial))
+	out <- a
+	copy(a, initial)
+	N := len(a)
+	p := make([]int, N+1)
+	for i := 0; i < N+1; i++ {
+		p[i] = i
+	}
+	i := 1
+	for i < N {
+		p[i]--
+		j := 0
+		if i%2 == 1 {
+			j = p[i]
+		}
+		a[i], a[j] = a[j], a[i]
+		out <- a
+		i = 1
+		for p[i] == 0 {
+			p[i] = i
+			i++
+		}
+	}
+	close(out)
+}
+
+func loadProgramFromFile(path string) []int {
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var lines []string
+
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	var memory []int
+	for _, line := range lines {
+		nums := strings.Split(line, ",")
+		for _, num := range nums {
+			parsed, err := strconv.Atoi(num)
+			if err != nil {
+				log.Fatal(err)
+			}
+			memory = append(memory, parsed)
+		}
+
+	}
+	return memory
 }
